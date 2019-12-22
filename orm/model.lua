@@ -2,6 +2,8 @@
 --                               Require                                    --
 ------------------------------------------------------------------------------
 
+local mysql = require("resty.mysql")
+
 require('orm.class.global')
 require("orm.tools.func")
 
@@ -14,12 +16,6 @@ local Table = require('orm.class.table')
 ID = "id"
 AGGREGATOR = "aggregator"
 QUERY_LIST = "query_list"
-
--- databases types
-SQLITE = "sqlite3"
-ORACLE = "oracle"
-MYSQL = "mysql"
-POSTGRESQL = "postgresql"
 
 ------------------------------------------------------------------------------
 --                              Model Settings                              --
@@ -36,54 +32,22 @@ DB = {
     DEBUG = (DB.DEBUG == true),
     backtrace = (DB.backtrace == true),
     -- database settings
-    type = DB.type or "sqlite3",
-    -- if you use sqlite set database path value
-    -- if not set a database name
-    name = DB.name or "database.db",
-    -- not sqlite db settings
+    name = DB.name or "app",
     host = DB.host or nil,
     port = DB.port or nil,
     username = DB.username or nil,
     password = DB.password or nil
 }
 
-local sql, _connect
+local _conn = mysql:new()
+local ok, err, errcode, sqlstate = _conn:connect(DB.name, DB.username, DB.password, DB.host, DB.port)
 
--- Get database by settings
-if DB.type == SQLITE then
-    local luasql = require("luasql.sqlite3")
-    sql = luasql.sqlite3()
-    _connect = sql:connect(DB.name)
-
-elseif DB.type == MYSQL then
-    local luasql = require("luasql.mysql")
-    sql = luasql.mysql()
-    print(DB.name, DB.username, DB.password, DB.host, DB.port)
-    _connect = sql:connect(DB.name, DB.username, DB.password, DB.host, DB.port)
-
-elseif DB.type == POSTGRESQL then
-    local luasql = require("luasql.postgres")
-    sql = luasql.postgres()
-    print(DB.name, DB.username, DB.password, DB.host, DB.port)
-    _connect = sql:connect(DB.name, DB.username, DB.password, DB.host, DB.port)
-
-else
-    BACKTRACE(ERROR, "Database type not suported '" .. tostring(DB.type) .. "'")
-end
-
-if not _connect then
+if not ok then
     BACKTRACE(ERROR, "Connect problem!")
+    BACKTRACE(ERROR, err)
+    BACKTRACE(ERROR, errcode)
+    BACKTRACE(ERROR, table.concat({DB.host, DB.port, DB.name, DB.user}, ","))
 end
-
--- if DB.new then
---     BACKTRACE(INFO, "Remove old database")
-
---     if DB.type == SQLITE then
---         os.remove(DB.name)
---     else
---         _connect:execute('DROP DATABASE `' .. DB.name .. '`')
---     end
--- end
 
 ------------------------------------------------------------------------------
 --                               Database                                   --
@@ -92,14 +56,12 @@ end
 -- Database settings
 db = {
     -- Database connect instance
-    connect = _connect,
+    connect = _conn,
 
     -- Execute SQL query
     execute = function (self, query)
         BACKTRACE(DEBUG, query)
-
-        local result = self.connect:execute(query)
-
+        local result = self.connect:query(query)
         if result then
             return result
         else

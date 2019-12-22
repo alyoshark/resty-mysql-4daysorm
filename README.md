@@ -16,14 +16,11 @@ DB = {}
 
 **Database configurations**
 
-1. `type` - by default `"sqlite3"`. Also it can be:
-    - `"mysql"` - for MySQL database
-    - `"postgresql"` - for PostgreSQL database (*implemented soon*)
-2. `name` - this is a path to database file for `"sqlite3"`. For other databases this value contains database name. (*by default `"database.db"`*)
-3. `username` - database user name (*by default `nil`*)
-4. `password` - database password (*by default `nil`*)
-5. `host` - database host (*by default `nil`*)
-6. `port` - database host port  (*by default `nil`*)
+1. `name` - database name (*by default `"app"`*)
+2. `username` - database user name (*by default `nil`*)
+3. `password` - database password (*by default `nil`*)
+4. `host` - database host (*by default `nil`*)
+5. `port` - database host port  (*by default `nil`*)
 
 
 ----------

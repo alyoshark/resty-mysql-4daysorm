@@ -1,3 +1,4 @@
+local quote_sql_str = ngx.quote_sql_str
 
 local Property = require('orm.class.property')
 
@@ -39,26 +40,12 @@ _G.SUM = Property({
 
 -- Escape text values to prevent sql injection
 function _G.escapeValue(own_table, colname, colvalue)
-
   local coltype = own_table:get_column(colname)
   if coltype and coltype.settings.escape_value then
-
     local fieldtype = coltype.field.__type__
     if fieldtype:find("text") or fieldtype:find("char") then
-
-      if (DB.type == "sqlite3" or DB.type == "mysql" or DB.type == "postgresql") then
-
-        -- See https://keplerproject.github.io/luasql/manual.html for a list of
-        -- database drivers that support this method
-        colvalue = db.connect:escape(colvalue)
-      elseif (DB.type == "oracle") then
-        BACKTRACE(WARNING, "Can't autoescape values for oracle databases (Tried to escape field `" .. colname .. "`)");
-      end
-
+      colvalue = quote_sql_str(colvalue)
     end
-
   end
-
   return colvalue;
-
 end
